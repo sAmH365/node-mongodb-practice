@@ -2,6 +2,7 @@ const express = require('express')
 const app = express()
 
 app.use(express.static(__dirname + '/public'))
+app.set('view engine', 'ejs')
 
 const { MongoClient } = require('mongodb')
 
@@ -37,5 +38,5 @@ app.get('/about', (req, res) => {
 app.get('/list', async (req, res) => {
     let result = await db.collection('post').find().toArray()
     console.log(result)
-    res.send('mongo DB post collection에 있던 목록들')
+    res.render('list.ejs', {posts : result})
 })
