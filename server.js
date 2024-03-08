@@ -40,3 +40,7 @@ app.get('/list', async (req, res) => {
     console.log(result)
     res.render('list.ejs', {posts : result})
 })
+
+app.get('/time', (req, res) => {
+    res.render('time.ejs', { time: new Date()})
+})
