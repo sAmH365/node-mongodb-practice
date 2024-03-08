@@ -6,5 +6,17 @@ app.listen(8080, () => {
 })
 
 app.get('/', (req, res) => {
-    res.send('greeting');
+    res.sendFile(__dirname + '/index.html')
+})
+
+app.get('/news', (req, res) => {
+    res.send('sunny')
+})
+
+app.get('/shop', (req, res) => {
+    res.send('shopping page')
+})
+
+app.get('/about', (req, res) => {
+    res.sendFile(__dirname + '/test.html')
 })
