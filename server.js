@@ -3,6 +3,8 @@ const app = express()
 
 app.use(express.static(__dirname + '/public'))
 app.set('view engine', 'ejs')
+app.use(express.json())
+app.use(express.urlencoded({extended:true}))
 
 const { MongoClient } = require('mongodb')
 
@@ -43,4 +45,19 @@ app.get('/list', async (req, res) => {
 
 app.get('/time', (req, res) => {
     res.render('time.ejs', { time: new Date()})
+})
+
+app.get('/write', (req, res) => {
+    res.render('write.ejs');
+})
+
+app.post('/add', async (req, res) => {
+    console.log(req.body);
+
+    let title = req.body.title;
+    let content = req.body.content;
+
+    let result = await db.collection('post').insertOne(req.body);
+    db.close;
+    console.log(result);
 })
