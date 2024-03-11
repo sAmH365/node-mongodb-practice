@@ -2,12 +2,23 @@ const express = require('express')
 const app = express()
 const { MongoClient, ObjectId } = require('mongodb')
 const methodOverride = require('method-override')
+const session = require('express-session')
+const passport = require('passport')
+const LocalStrategy = require('passport-local')
 
 app.use(methodOverride('_method'))
 app.use(express.static(__dirname + '/public'))
 app.set('view engine', 'ejs')
 app.use(express.json())
 app.use(express.urlencoded({extended:true}))
+
+app.use(passport.initialize())
+app.use(session({
+    secret: '암호화에쓸 비번',
+    resave : false,
+    saveUninitialized: false
+}))
+app.use(passport.session())
 
 
 let db;
@@ -135,4 +146,33 @@ app.get('/list/next/:id', async (req, res) => {
             }
         }).limit(5).toArray()
     res.render('list.ejs', {posts : result})
+})
+
+// passport.authenticate('local')() 쓰면 아래 함수 실행
+passport.use(new LocalStrategy(async (usernameInput, passwordInput, cb) => {
+    let result = await db.collection('user').findOne({username: usernameInput})
+    if (!result) {
+        return cb(null, false, {message : 'db에 아이디 없음'})
+    }
+    if (result.password === passwordInput) {
+        return cb(null, result)
+    } else {
+        return cb(null, false, {message: '비번 불일치'})
+    }
+}))
+
+app.get('/login', async (req, res) => {
+    res.render('login.ejs')
+})
+
+app.post('/login', async (req, res, next) => {
+    passport.authenticate('local', () => (error, user, info) => {
+        if (error) return res.status(500).json(error)
+        if (!user) return res.status(401).json(info.message)
+
+        req.logIn(user, (err) => {
+            if (err) return next(err)
+            res.redirect('/')
+        })
+    })(req, res, next)
 })
