@@ -16,7 +16,8 @@ app.use(passport.initialize())
 app.use(session({
     secret: '암호화에쓸 비번',
     resave : false,
-    saveUninitialized: false
+    saveUninitialized: false,
+    cookie: { maxAge : 60 * 60 * 1000 }
 }))
 app.use(passport.session())
 
@@ -52,7 +53,6 @@ app.get('/about', (req, res) => {
 
 app.get('/list', async (req, res) => {
     let result = await db.collection('post').find().toArray()
-    console.log(result)
     res.render('list.ejs', {posts : result})
 })
 
@@ -133,7 +133,6 @@ app.get('/list/:page', async (req, res) => {
     let result = await db.collection('post').find()
         .skip((req.params.page - 1) * 5)
         .limit(5).toArray()
-    console.log(result)
     res.render('list.ejs', {posts : result})
 })
 
@@ -155,18 +154,36 @@ passport.use(new LocalStrategy(async (usernameInput, passwordInput, cb) => {
         return cb(null, false, {message : 'db에 아이디 없음'})
     }
     if (result.password === passwordInput) {
+        console.log("아이디ok + 비밀번호ok", result)
         return cb(null, result)
     } else {
         return cb(null, false, {message: '비번 불일치'})
     }
 }))
 
-app.get('/login', async (req, res) => {
+passport.serializeUser((user, done) => {
+    // console.log(user)
+    process.nextTick(() => { // req.login() 쓰면 자동 실행됨
+        done(null, {id : user._id, username: user.username})
+    })
+})
+
+passport.deserializeUser(async (user, done) => {
+    let result = await db.collection('user').findOne({_id : new ObjectId(user.id)})
+    delete result.password
+    process.nextTick(() => { // 유저가 보낸 쿠키 분석은 passport.deserializeUser()
+        done(null, result)
+    })
+})
+
+app.get('/login', (req, res) => {
+    console.log(req.user)
     res.render('login.ejs')
 })
 
 app.post('/login', async (req, res, next) => {
-    passport.authenticate('local', () => (error, user, info) => {
+    passport.authenticate('local', (error, user, info) => {
+        console.log('실행')
         if (error) return res.status(500).json(error)
         if (!user) return res.status(401).json(info.message)
 
