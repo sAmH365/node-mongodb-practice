@@ -5,6 +5,8 @@ const methodOverride = require('method-override')
 const session = require('express-session')
 const passport = require('passport')
 const LocalStrategy = require('passport-local')
+const bcrypt = require('bcrypt')
+const MongoStore = require('connect-mongo')
 
 app.use(methodOverride('_method'))
 app.use(express.static(__dirname + '/public'))
@@ -17,7 +19,11 @@ app.use(session({
     secret: '암호화에쓸 비번',
     resave : false,
     saveUninitialized: false,
-    cookie: { maxAge : 60 * 60 * 1000 }
+    cookie: { maxAge : 60 * 60 * 1000 },
+    store : MongoStore.create({
+        mongoUrl : 'mongodb+srv://admin:green1234@cluster0.oypy2of.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0',
+        dbName : 'forum'
+    })
 }))
 app.use(passport.session())
 
@@ -153,7 +159,8 @@ passport.use(new LocalStrategy(async (usernameInput, passwordInput, cb) => {
     if (!result) {
         return cb(null, false, {message : 'db에 아이디 없음'})
     }
-    if (result.password === passwordInput) {
+
+    if (await bcrypt.compare(passwordInput, result.password)) {
         console.log("아이디ok + 비밀번호ok", result)
         return cb(null, result)
     } else {
@@ -192,4 +199,20 @@ app.post('/login', async (req, res, next) => {
             res.redirect('/')
         })
     })(req, res, next)
+})
+
+app.get('/register', (req, res) => {
+    res.render('register.ejs')
+})
+
+app.post('/register', async(req, res) => {
+
+    let hash =  await bcrypt.hash(req.body.password, 10)
+    console.log(hash)
+
+    await db.collection('user').insertOne({
+        username: req.body.username,
+        password: hash
+    })
+    res.redirect('/')
 })
