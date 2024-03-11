@@ -85,3 +85,22 @@ app.get('/detail/:id', async (req, res, next) => {
         res.status(400).send('이상한 url')
     }
 });
+
+app.get('/edit/:id', async (req, res, next) => {
+    try {
+        let result = await db.collection('post').findOne({ _id : new ObjectId(req.params.id)});
+        console.log(result);
+        res.render('edit.ejs', {result: result})
+    } catch (e) {
+        console.log(e)
+        res.status(400).send('이상한 url')
+    }
+});
+
+app.post('/edit', async (req, res, next) => {
+    // console.log(req.body.id)
+    await db.collection('post').updateOne({ _id : new ObjectId(req.body.id)}, {
+        $set: {title : req.body.title, content: req.body.content}
+    })
+    res.redirect('/list')
+});
