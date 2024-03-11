@@ -57,7 +57,20 @@ app.post('/add', async (req, res) => {
     let title = req.body.title;
     let content = req.body.content;
 
-    let result = await db.collection('post').insertOne(req.body);
-    db.close;
-    console.log(result);
+    try {
+        if (title === '') {
+            res.send('제목은 필수입니다.')
+        } else {
+            let result = await db.collection('post').insertOne({
+                title: title,
+                content: content
+            });
+            res.redirect('/write');
+
+            console.log(result);
+        }
+    } catch (e) {
+        console.log(e);
+        res.status(500).send('서버에러남');
+    }
 })
