@@ -108,7 +108,11 @@ app.put('/edit', async (req, res, next) => {
 });
 
 app.delete('/delete', async (req, res) => {
-    console.log(req.query)
+    console.log(new ObjectId(req.query.docid))
     await db.collection('post').deleteOne({_id: new ObjectId(req.query.docid)})
     res.send('삭제완료');
+})
+
+app.get('/URL', (req, res) => {
+    res.send('hello');
 })
