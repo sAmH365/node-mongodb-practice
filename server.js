@@ -231,7 +231,15 @@ app.post('/register', async(req, res) => {
 app.use('/shop', require('./routes/shop.js'))
 
 app.get('/search', async (req, res) => {
+    let searchCondition = [
+        {$search : {
+            index : 'title_index',
+            text : { query : req.query.val, path : 'title' }
+        }},
+        { $sort : {_id : 1} }
+    ]
+
     let result = await db.collection('post')
-        .find({$text : { $search : req.query.val}}).toArray()
+        .aggregate(searchCondition).toArray()
     res.render('search.ejs', {posts: result})
 })
