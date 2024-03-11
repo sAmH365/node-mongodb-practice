@@ -116,3 +116,23 @@ app.delete('/delete', async (req, res) => {
 app.get('/URL', (req, res) => {
     res.send('hello');
 })
+
+app.get('/list/:page', async (req, res) => {
+    console.log(req.params)
+    let result = await db.collection('post').find()
+        .skip((req.params.page - 1) * 5)
+        .limit(5).toArray()
+    console.log(result)
+    res.render('list.ejs', {posts : result})
+})
+
+app.get('/list/next/:id', async (req, res) => {
+    console.log(req.params.id)
+    let result = await db.collection('post')
+        .find({
+            _id : {
+                $gt : new ObjectId(req.params.id)
+            }
+        }).limit(5).toArray()
+    res.render('list.ejs', {posts : result})
+})
