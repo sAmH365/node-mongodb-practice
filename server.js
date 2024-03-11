@@ -6,7 +6,7 @@ app.set('view engine', 'ejs')
 app.use(express.json())
 app.use(express.urlencoded({extended:true}))
 
-const { MongoClient } = require('mongodb')
+const { MongoClient, ObjectId } = require('mongodb')
 
 let db;
 const url = 'mongodb+srv://admin:green1234@cluster0.oypy2of.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
@@ -73,4 +73,15 @@ app.post('/add', async (req, res) => {
         console.log(e);
         res.status(500).send('서버에러남');
     }
-})
+});
+
+app.get('/detail/:id', async (req, res, next) => {
+    try {
+        let result = await db.collection('post').findOne({ _id : new ObjectId(req.params.id)});
+        console.log(result);
+        res.render('detail.ejs', {result: result})
+    } catch (e) {
+        console.log(e)
+        res.status(400).send('이상한 url')
+    }
+});
