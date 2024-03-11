@@ -11,7 +11,7 @@
 <body class="grey-bg">
     <%- include('nav.ejs') %>
 
-    <form class="form-box" action="/edit" method="post">
+    <form class="form-box" action="/edit?_method=PUT" method="post">
         <h4>수정하기</h4>
         <input hidden="hidden" name="id" value="<%=result._id%>">
         <input name="title" value="<%=result.title%>">

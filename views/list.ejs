@@ -20,11 +20,23 @@
                             <%= posts[i].title %>
                         </a>
                         <a href="/edit/<%=posts[i]._id%>">✏️</a>
+                        <span class="delete" data-id="<%=posts[i]._id%>>">🗑️</span>
                     </h4>
                     <p><%=posts[i].content%></p>
                 </div>
             <% } %>
         </div>
     </div>
+
+<script>
+    document.querySelectorAll('.delete')[0].addEventListener('click', function (e){
+        fetch('/delete?docid=' + e.target.dataset.id, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type':'application/json'
+            }
+        })
+    })
+</script>
 </body>
 </html>

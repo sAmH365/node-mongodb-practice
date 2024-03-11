@@ -1,12 +1,14 @@
 const express = require('express')
 const app = express()
+const { MongoClient, ObjectId } = require('mongodb')
+const methodOverride = require('method-override')
 
+app.use(methodOverride('_method'))
 app.use(express.static(__dirname + '/public'))
 app.set('view engine', 'ejs')
 app.use(express.json())
 app.use(express.urlencoded({extended:true}))
 
-const { MongoClient, ObjectId } = require('mongodb')
 
 let db;
 const url = 'mongodb+srv://admin:green1234@cluster0.oypy2of.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
@@ -97,10 +99,16 @@ app.get('/edit/:id', async (req, res, next) => {
     }
 });
 
-app.post('/edit', async (req, res, next) => {
+app.put('/edit', async (req, res, next) => {
     // console.log(req.body.id)
     await db.collection('post').updateOne({ _id : new ObjectId(req.body.id)}, {
         $set: {title : req.body.title, content: req.body.content}
     })
     res.redirect('/list')
 });
+
+app.delete('/delete', async (req, res) => {
+    console.log(req.query)
+    await db.collection('post').deleteOne({_id: new ObjectId(req.query.docid)})
+    res.send('삭제완료');
+})
