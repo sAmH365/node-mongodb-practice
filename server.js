@@ -8,6 +8,8 @@ const LocalStrategy = require('passport-local')
 const bcrypt = require('bcrypt')
 const MongoStore = require('connect-mongo')
 
+require('dotenv').config()
+
 app.use(methodOverride('_method'))
 app.use(express.static(__dirname + '/public'))
 app.set('view engine', 'ejs')
@@ -21,24 +23,33 @@ app.use(session({
     saveUninitialized: false,
     cookie: { maxAge : 60 * 60 * 1000 },
     store : MongoStore.create({
-        mongoUrl : 'mongodb+srv://admin:green1234@cluster0.oypy2of.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0',
+        mongoUrl : process.env.DB_URL,
         dbName : 'forum'
     })
 }))
 app.use(passport.session())
 
+let connectDB = require('./database.js')
 
 let db;
-const url = 'mongodb+srv://admin:green1234@cluster0.oypy2of.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
-new MongoClient(url).connect().then((client) => {
+connectDB.then((client) => {
     console.log('DB연결 성공')
-    app.listen(8080, () => {
+    app.listen(process.env.PORT, () => {
         console.log('http://localhost:8080 에서 서버 실행중');
     })
     db = client.db('forum')
 }).catch(err => {
     console.log(err)
 })
+
+function checkLogin(req, res, next) {
+    if (!res.user) {
+        res.send('로그인하세요')
+    }
+    next()
+}
+
+// app.use(checkLogin) // 여기 밑에있는 모든 API는 checkLogin 미들웨어 적용됨
 
 app.get('/', (req, res) => {
     res.sendFile(__dirname + '/index.html')
@@ -216,3 +227,5 @@ app.post('/register', async(req, res) => {
     })
     res.redirect('/')
 })
+
+app.use('/shop', require('./routes/shop.js'))
