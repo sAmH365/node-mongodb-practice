@@ -229,3 +229,9 @@ app.post('/register', async(req, res) => {
 })
 
 app.use('/shop', require('./routes/shop.js'))
+
+app.get('/search', async (req, res) => {
+    let result = await db.collection('post')
+        .find({title : { $regex : req.query.val}}).toArray()
+    res.render('search.ejs', {posts: result})
+})
