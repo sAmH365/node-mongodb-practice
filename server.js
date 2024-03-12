@@ -291,3 +291,17 @@ io.on('connection', (socket) => {
         console.log(data)
     })
 })
+
+app.get('/stream/list', (req, res) => {
+    res.writeHead(200, {
+        "Connection": "keep-alive",
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache"
+    })
+
+    setInterval(() => {
+        res.write('event: msg\n')
+        res.write('data: babo\n\n')
+    }, 1000)
+
+})
