@@ -8,6 +8,11 @@ const LocalStrategy = require('passport-local')
 const bcrypt = require('bcrypt')
 const MongoStore = require('connect-mongo')
 
+const { createServer } = require('http')
+const { Server } = require('socket.io')
+const server = createServer(app)
+const io = new Server(server)
+
 require('dotenv').config()
 
 app.use(methodOverride('_method'))
@@ -34,7 +39,7 @@ let connectDB = require('./database.js')
 let db;
 connectDB.then((client) => {
     console.log('DB연결 성공')
-    app.listen(process.env.PORT, () => {
+    server.listen(process.env.PORT, () => {
         console.log('http://localhost:8080 에서 서버 실행중');
     })
     db = client.db('forum')
@@ -93,7 +98,9 @@ app.post('/add', async (req, res) => {
         } else {
             let result = await db.collection('post').insertOne({
                 title: title,
-                content: content
+                content: content,
+                user: req.user._id,
+                username: req.user.username
             });
             res.redirect('/write');
 
@@ -137,7 +144,10 @@ app.put('/edit', async (req, res, next) => {
 
 app.delete('/delete', async (req, res) => {
     console.log(new ObjectId(req.query.docid))
-    await db.collection('post').deleteOne({_id: new ObjectId(req.query.docid)})
+    await db.collection('post').deleteOne({
+        _id: new ObjectId(req.query.docid),
+        user: new ObjectId(req.user._id)
+    })
     res.send('삭제완료');
 })
 
@@ -242,4 +252,42 @@ app.get('/search', async (req, res) => {
     let result = await db.collection('post')
         .aggregate(searchCondition).toArray()
     res.render('search.ejs', {posts: result})
+})
+
+app.get('/chat/request', async (req, res) => {
+    await db.collection('chatroom').insertOne({
+        member: [req.user._id , new ObjectId(req.query.writerId)],
+        date: new Date()
+    })
+    res.redirect('/chat/list')
+})
+
+app.get('/chat/list', async (req, res) => {
+    let result = await db.collection('chatroom').find({
+        member : req.user._id
+    }).toArray()
+    res.render('chatList.ejs', {result : result})
+})
+
+app.get('/chat/detail/:id', async (req, res) => {
+    let result = await db.collection('chatroom').findOne({_id : new ObjectId(req.params.id)})
+    res.render('chatDetail.ejs', {result : result})
+})
+
+io.on('connection', (socket) => {
+    console.log('some people websocket connection!')
+
+    socket.on('age', data => {
+        console.log('유저가 보낸거 : ', data)
+        io.emit('name', 'kim')
+    })
+
+    socket.on('ask-join', data => {
+        socket.join(data)
+    })
+
+    socket.on('message', data => {
+        io.to(data.room).emit('broadcast', data.msg)
+        console.log(data)
+    })
 })
