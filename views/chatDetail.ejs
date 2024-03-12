@@ -27,14 +27,16 @@
     <script>
         const socket = io()
 
-        socket.emit('ask-join', '1')
+        socket.emit('ask-join', '<%= result._id %>')
 
         document.querySelector('.chat-button').addEventListener('click', function (){
-            socket.emit('message', { msg : '반갑습니다', room: '1' })
+            let inputChat = document.querySelector('.chat-input').value;
+            socket.emit('message-send', { msg : inputChat, room: '<%= result._id %>' })
         })
 
-        socket.on('broadcast', (data) => {
-            console.log(data)
+        socket.on('message-broadcast', (data) => {
+            document.querySelector('.chat-screen')
+                .insertAdjacentHTML('beforeend', `<div class="chat-box"><span>${data}</span></div>`)
         })
     </script>
 </body>
