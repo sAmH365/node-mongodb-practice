@@ -37,12 +37,19 @@ app.use(passport.session())
 let connectDB = require('./database.js')
 
 let db;
+let changeStream;
 connectDB.then((client) => {
     console.log('DB연결 성공')
     server.listen(process.env.PORT, () => {
         console.log('http://localhost:8080 에서 서버 실행중');
     })
     db = client.db('forum')
+
+    let condition = [
+        { $match: { operationType: 'insert' } }
+    ]
+    changeStream = db.collection('post').watch(condition)
+
 }).catch(err => {
     console.log(err)
 })
@@ -299,9 +306,10 @@ app.get('/stream/list', (req, res) => {
         "Cache-Control": "no-cache"
     })
 
-    setInterval(() => {
+    changeStream.on('change', result => {
+        console.log(result.fullDocument)
         res.write('event: msg\n')
-        res.write('data: babo\n\n')
-    }, 1000)
+        res.write(`data: ${JSON.stringify(result.fullDocument)}\n\n`)
+    })
 
 })
