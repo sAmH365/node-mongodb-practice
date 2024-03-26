@@ -7,6 +7,7 @@ const passport = require('passport')
 const LocalStrategy = require('passport-local')
 const bcrypt = require('bcrypt')
 const MongoStore = require('connect-mongo')
+const QRCode = require('qrcode')
 
 const { createServer } = require('http')
 const { Server } = require('socket.io')
@@ -313,3 +314,40 @@ app.get('/stream/list', (req, res) => {
     })
 
 })
+
+app.get('/qr', (req, res, next) => {
+    res.render('qrCode')
+})
+
+app.post('/make',(req,res,next)=>{
+    const text = req.body.text;
+
+    QRCode.toDataURL(text, (err, url) => {
+        const data = url.replace(/.*,/, "");
+        const img = new Buffer.from(data, 'base64');
+
+        res.writeHead(200, {
+            "Content-Type": "image/png",
+            "Content-Length": img.length
+        });
+
+        res.end(img)
+    })
+})
+
+app.get('/qrTest', (req, res) => {
+    res.render('qrTest')
+})
+
+app.get('/api/generate-qr', async (req, res) => {
+    const dataToEncode = req.query.data || 'https://example.com';
+
+    try {
+        const qrUrl = await QRCode.toDataURL(dataToEncode, { errorCorrectionLevel: 'H' });
+        // QR 코드 URL을 JSON 형식으로 클라이언트에게 전송
+        res.json({ qrCodeUrl: qrUrl });
+    } catch (err) {
+        console.error('QR Code 생성 중 오류 발생:', err);
+        res.status(500).json({ error: 'QR Code 생성 오류' });
+    }
+});

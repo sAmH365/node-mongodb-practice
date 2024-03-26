@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<img id="qrCodeImage" src="" alt="QR Code" />
+
+<script>
+  // API로부터 QR 코드 URL을 가져와 이미지 태그에 설정하는 예제 코드
+  fetch('/api/generate-qr?data=http://www.naver.com')
+          .then(response => response.json())
+          .then(data => {
+            document.getElementById('qrCodeImage').src = data.qrCodeUrl;
+          });
+</script>
+
+</body>
+</html>

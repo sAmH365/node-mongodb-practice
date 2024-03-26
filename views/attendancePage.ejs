@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<img id="qrCodeImage" src="www.naver.com?tsetId=123" alt="QR Code" />
+<!--src에 임의 페이지로 리다이렉션-->
+
+<script>
+    fetch('/qr-prcess?userId=<% userId %>').then(() => fetch('/'))
+</script>
+
+</body>
+</html>
